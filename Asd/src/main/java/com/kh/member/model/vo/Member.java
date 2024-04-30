@@ -9,7 +9,7 @@ public class Member {
 	private String address;
 	private int score;
 	
-	
+	adskdaskdas;dasd;askl
 	private String gender;
 	
 
