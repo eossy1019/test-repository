@@ -51,7 +51,10 @@ public class Member {
 		this.gender = gender;
 	}
 	
-
+	public Member() {
+		super();
+	}
+	
 	
 	
 
