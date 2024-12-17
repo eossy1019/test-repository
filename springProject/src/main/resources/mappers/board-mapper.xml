@@ -1,0 +1,280 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="boardMapper">
+	
+	<select id="listCount" resultType="_int">
+		SELECT COUNT(*)
+		FROM BOARD 
+		WHERE STATUS = 'Y'
+	</select>	
+	
+	<resultMap type="Board" id="boardResultSet">
+		<result column="BOARD_NO" property="boardNo"/>
+		<result column="BOARD_TITLE" property="boardTitle"/>
+		<result column="BOARD_WRITER" property="boardWriter"/>
+		<result column="BOARD_CONTENT" property="boardContent"/>
+		<result column="ORIGIN_NAME" property="originName"/>
+		<result column="CHANGE_NAME" property="changeName"/>
+		<result column="COUNT" property="count"/>
+		<result column="CREATE_DATE" property="createDate"/>
+	</resultMap>
+	
+	<!-- 게시글 목록 -->
+	<select id="selectList" resultMap="boardResultSet">
+		SELECT BOARD_NO
+			  ,BOARD_TITLE
+			  ,BOARD_WRITER
+			  ,COUNT
+			  ,CREATE_DATE
+			  ,ORIGIN_NAME
+		FROM BOARD
+		WHERE STATUS = 'Y'
+		ORDER BY CREATE_DATE DESC
+	</select>
+	
+	
+	
+	<!-- 검색 목록 개수 -->
+	<select id="searchListCount" resultType="_int">
+		SELECT COUNT(*)
+		FROM BOARD 
+		WHERE STATUS = 'Y'
+		<choose>
+			<when test="condition=='writer'">
+				AND BOARD_WRITER 
+			</when>
+			<when test="condition=='title'">
+				AND BOARD_TITLE
+			</when>
+			<otherwise>
+				AND BOARD_CONTENT
+			</otherwise>
+		</choose>
+		LIKE '%'||#{keyword}||'%'
+	</select>
+	
+	
+	
+	<!-- 검색 목록 -->
+	<select id="searchList" resultMap="boardResultSet">
+		SELECT BOARD_NO
+			  ,BOARD_TITLE
+			  ,BOARD_WRITER
+			  ,COUNT
+			  ,CREATE_DATE
+			  ,ORIGIN_NAME
+		FROM BOARD 
+		WHERE STATUS = 'Y'
+		<choose>
+			<when test="condition=='writer'">
+				AND BOARD_WRITER 
+			</when>
+			<when test="condition=='title'">
+				AND BOARD_TITLE
+			</when>
+			<otherwise>
+				AND BOARD_CONTENT
+			</otherwise>
+		</choose>
+		LIKE '%'||#{keyword}||'%'
+		ORDER BY CREATE_DATE DESC
+	</select>
+	
+	
+	<update id="increaseCount" parameterType="_int">
+		UPDATE BOARD
+		SET COUNT = COUNT+1
+		WHERE BOARD_NO = #{boardNo}
+		AND STATUS = 'Y'
+	</update>
+	
+	<select id="selectBoard" resultMap="boardResultSet" parameterType="_int">
+		SELECT BOARD_NO
+			  ,BOARD_TITLE
+			  ,BOARD_WRITER
+			  ,BOARD_CONTENT
+			  ,CREATE_DATE
+			  ,ORIGIN_NAME
+			  ,CHANGE_NAME
+		FROM BOARD 
+		WHERE BOARD_NO = #{boardNo}
+		AND STATUS = 'Y'
+	</select>
+	
+	
+	<insert id="insertBoard" parameterType="Board">
+		INSERT INTO BOARD(
+						  BOARD_NO
+						 ,BOARD_TITLE
+						 ,BOARD_WRITER
+						 ,BOARD_CONTENT
+						 ,ORIGIN_NAME
+						 ,CHANGE_NAME
+					     )
+				VALUES (
+						<!-- SEQ_BNO.NEXTVAL -->
+					    #{boardNo}
+					   ,#{boardTitle}
+					   ,#{boardWriter}
+					   ,#{boardContent}
+					   ,#{originName}
+					   ,#{changeName}	
+						)
+	</insert>
+	
+	
+	
+	<delete id="deleteBoard" parameterType="_int">
+		DELETE FROM 
+		BOARD
+		WHERE BOARD_NO = #{boardNo}
+		AND STATUS = 'Y'
+	</delete>
+	
+	
+	<update id="updateBoard" parameterType="Board">
+		UPDATE BOARD
+		SET BOARD_TITLE = #{boardTitle}
+		   ,BOARD_CONTENT = #{boardContent}
+		   ,ORIGIN_NAME  = #{originName}
+		   ,CHANGE_NAME = #{changeName}
+		WHERE BOARD_NO = #{boardNo}
+		AND STATUS = 'Y'
+	</update>
+	
+	
+	<select id="replyList" parameterType="_int" resultType="com.kh.spring.board.model.vo.Reply">
+		SELECT REPLY_NO replyNo
+		      ,REPLY_WRITER replyWriter
+		      ,REPLY_CONTENT replyContent
+		      ,TO_CHAR(CREATE_DATE,'YYYY-MM-DD') createDate
+		     <!-- ,CREATE_DATE createDate  --> 
+		FROM REPLY
+		WHERE REF_BNO = #{boardNo}
+		AND STATUS ='Y'
+		ORDER BY CREATE_DATE DESC
+	</select>
+	
+	<insert id="insertReply" parameterType="com.kh.spring.board.model.vo.Reply">
+		INSERT INTO REPLY(REPLY_NO
+						 ,REPLY_WRITER
+						 ,REPLY_CONTENT
+						 ,REF_BNO)
+				 	VALUES(
+				 		  SEQ_RNO.NEXTVAL
+				 		 ,#{replyWriter}
+				 		 ,#{replyContent}
+				 		 ,#{refBno}
+				 	)	
+	</insert>
+	
+	
+	<select id="selectTopList" resultMap="boardResultSet">
+		<!-- 만약 XML문서에서 <> 와같이 태그로 인식될 수 있는 특수문자를 사용해야한다면
+			 문자열로 인식되지 않는 문제가 발생한다. 
+			 이를 문자열로써 인식될 수 있도록 하는 구문 
+			 <![CDATA[ <= ]]> 5
+			 해당 위치에 CDATA 구문을 넣어서 해당 특수문자를 문자열로 인식시킴
+			  -->
+		
+		SELECT *
+		FROM (SELECT   BOARD_NO
+		              ,BOARD_TITLE
+		              ,BOARD_WRITER
+		              ,COUNT
+		              ,CREATE_DATE
+		              ,ORIGIN_NAME
+	          FROM BOARD
+	          ORDER BY COUNT DESC)
+	   <![CDATA[ WHERE ROWNUM <= 5 ]]>  
+		<!--  WHERE ROWNUM BETWEEN 1 AND 5 -->
+	</select>
+	
+	
+	<!-- resultMap에 collection 이용해보기  -->
+	
+	<select id="selectBoardReply" resultMap="boardResultSet2">
+		SELECT BOARD_NO,
+		       BOARD_TITLE,
+		       BOARD_WRITER,
+		       BOARD_CONTENT,
+		       ORIGIN_NAME,
+		       CHANGE_NAME,
+		       COUNT,
+		       B.CREATE_DATE,
+		       REPLY_NO,
+		       REPLY_CONTENT,
+		       REPLY_WRITER,
+		       R.CREATE_DATE AS "REPLY_CREATE_DATE"
+		FROM BOARD B 
+		JOIN REPLY R ON (BOARD_NO = REF_BNO)
+		WHERE BOARD_NO = #{boardNo}
+	</select>
+	
+	
+	<resultMap type="Board" id="boardResultSet2">
+		<result column="BOARD_NO" property="boardNo"/>
+		<result column="BOARD_TITLE" property="boardTitle"/>
+		<result column="BOARD_WRITER" property="boardWriter"/>
+		<result column="BOARD_CONTENT" property="boardContent"/>
+		<result column="ORIGIN_NAME" property="originName"/>
+		<result column="CHANGE_NAME" property="changeName"/>
+		<result column="COUNT" property="count"/>
+		<result column="CREATE_DATE" property="createDate"/>
+		
+		
+		<collection property="rList" ofType="com.kh.spring.board.model.vo.Reply">
+			<result column="REPLY_NO" property="replyNo"/>
+			<result column="REPLY_CONTENT" property="replyContent"/>
+			<result column="REPLY_WRITER" property="replyWriter"/>
+			<result column="REPLY_CREATE_DATE" property="createDate"/>
+		</collection>
+		
+	</resultMap>
+	
+	
+	<!-- 스케줄러 테스트용 가장 오래된 게시글 STATUS 변경 구문 -->
+	<update id="statusN">
+		UPDATE BOARD
+		SET STATUS = 'N'
+		WHERE BOARD_NO = 
+		                (SELECT BOARD_NO
+		                 FROM (
+		                        SELECT *
+		                        FROM BOARD
+		                        WHERE STATUS = 'Y'
+		                        ORDER BY CREATE_DATE
+		                       )
+		                 WHERE ROWNUM = 1)
+	</update>
+	
+	<select id="countStatus" resultType="_int">
+		SELECT COUNT(*)
+		FROM BOARD
+		WHERE STATUS='N'
+	</select>
+		
+	<select id="selectBoardList" resultMap="boardResultSet">
+		SELECT B.*,R.*
+		FROM BOARD B,REPLY R
+	</select>
+	
+	<update id="deleteStatusN">
+		UPDATE BOARD
+		SET STATUS = 'N'
+		WHERE BOARD_NO = #{bno}
+	</update>
+	
+	<select id="memberBoardList" resultMap="boardResultSet">
+		SELECT * 
+		FROM BOARD
+		WHERE BOARD_WRITER = #{userId}
+	
+	</select>
+	
+	
+
+</mapper>  
+  

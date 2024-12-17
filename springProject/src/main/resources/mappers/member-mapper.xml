@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="memberMapper">
+	
+	<select id="loginMember" parameterType="Member" resultMap="memberResultSet">
+		SELECT *
+		FROM MEMBER
+		WHERE USER_ID = #{userId}
+		AND STATUS ='Y'
+		<!-- 
+		 AND USER_PWD = #{userPwd} 
+		 암호화 작업 후 조회할때는 아이디만 이용하여 조회하고 
+		 비밀번호는 바로 비교할 수 없기때문에 controller에서 복호화 메소드를 이용하여 확인할것	 
+		-->
+	</select>
+	
+	<resultMap type="Member" id="memberResultSet">
+		<result column="USER_ID" property="userId"/>
+		<result column="USER_PWD" property="userPwd"/>
+		<result column="USER_NAME" property="userName"/>
+		<result column="ENROLL_DATE" property="enrollDate"/>
+		<result column="MODIFY_DATE" property="modifyDate"/>
+	</resultMap>
+	
+	
+	<insert id="insertMember" parameterType="Member">
+		INSERT INTO MEMBER(  
+							 USER_ID
+							,USER_PWD
+							,USER_NAME
+							,EMAIL
+							,GENDER
+							,AGE
+							,PHONE
+							,ADDRESS
+						  )
+					VALUES(
+						    #{userId}
+						   ,#{userPwd}
+						   ,#{userName}
+						   ,#{email}
+						   ,#{gender}
+						   ,#{age}
+						   ,#{phone}
+						   ,#{address}
+						   )
+	</insert>
+	
+	
+	<update id="updateMember" parameterType="Member">
+		
+		UPDATE MEMBER
+		SET USER_NAME = #{userName}
+		   ,EMAIL = #{email}
+		   ,AGE = #{age}
+		   ,PHONE = #{phone}
+		   ,ADDRESS = #{address}
+		   ,GENDER = #{gender}
+	    WHERE USER_ID = #{userId}
+	    AND STATUS = 'Y'
+	</update>
+	
+	
+	<delete id="deleteMember" parameterType="string">
+		DELETE FROM MEMBER
+		WHERE USER_ID = #{userId}
+	</delete>
+	
+	
+	<select id="idCheck" parameterType="string" resultType="_int">
+		SELECT COUNT(*)
+		FROM MEMBER
+		WHERE USER_ID = #{checkId}
+	</select>
+	
+	
+	
+	
+
+</mapper>  
+  
