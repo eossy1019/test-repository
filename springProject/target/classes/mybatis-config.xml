@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration
+  PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+ 	<settings>
+ 		<setting name="jdbcTypeForNull" value="NULL"/>
+ 	</settings>
+ 	
+ 	<typeAliases>
+ 		<typeAlias type="com.kh.spring.member.model.vo.Member" alias="Member"/>
+ 		<typeAlias type="com.kh.spring.board.model.vo.Board" alias="Board"/>	
+ 	</typeAliases>
+ 	
+ 	<!-- 
+ 		기존 mybatis프로젝트에서는 DB등록 정보를 해당 config파일에서 작성하였지만
+ 		spring에서는 DB를 직접 다루길 원하기 때문에 해당 접속 정보를 
+ 		root-context 설정파일에 작성하여 등록한다.
+ 		mapper구문도 마찬가지로 spring에서 호출해서 사용할 수 있도록 root-context에 등록하여 사용한다.
+ 	 -->
+ 	
+</configuration>

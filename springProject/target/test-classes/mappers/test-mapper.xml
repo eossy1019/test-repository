@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="testMapper">
+	
+	<insert id="insertCategory">
+		INSERT INTO CATEGORY 
+		VALUES (#{categoryNo},#{categoryName})
+	</insert>	
+	
+	<insert id="insertProduct">
+		INSERT INTO Product 
+		VALUES (#{productNo},#{productName},#{categoryNo})
+	</insert>	
+	
+	<select id="categoryList" resultType="com.kh.spring.transaction.model.vo.Category">
+		SELECT CATEGORY_NO categoryNo
+			  ,CATEGORY_NAME categoryName
+		FROM CATEGORY
+	</select>
+	
+	<select id="productList" resultType="com.kh.spring.transaction.model.vo.Product">
+		SELECT PRODUCT_NO productNo
+			  ,PRODUCT_NAME productName
+			  ,CATEGORY_NO categoryNo
+		FROM PRODUCT
+	</select>
+	
+	
+	<!-- insertAll 로 데이터 묶음 전달받아 반복문으로 넣어보기 -->
+	<insert id="insertAllCategory" parameterType="arraylist">
+		INSERT ALL
+		<foreach collection="list" item="c">
+			INTO CATEGORY VALUES (#{c.categoryNo},#{c.categoryName})
+		</foreach>
+		SELECT * FROM DUAL
+	</insert>	
+	
+	<insert id="insertAllProduct" parameterType="arraylist">
+		INSERT ALL
+		<foreach collection="list" item="p">
+			INTO PRODUCT VALUES (#{p.productNo},#{p.productName},#{p.categoryNo})
+		</foreach>
+		SELECT * FROM DUAL
+	</insert>	
+	
+	
+	<!-- selectKey  -->
+	<!-- keyProperty : selectKey로 얻은 데이터를 어떠한 이름으로 사용할것인지
+		 resultType : selectKey로 얻은 데이터의 자료형
+		 order="BEFORE" : insert하기 전에 실행하는 설정
+		 order="AFTER" : insert한 후 실행하는 설정
+	  --> 
+	
+	<insert id="selectKey" parameterType="com.kh.spring.transaction.model.vo.Category">
+		<selectKey keyProperty="categoryNo" resultType="_int" order="BEFORE">
+			SELECT 99
+			FROM DUAL
+		</selectKey>
+		INSERT INTO CATEGORY VALUES(#{categoryNo},#{categoryName})
+	</insert>
+	 
+	<!-- 
+	<insert id="selectKeyTest" parameterType="arraylist">
+		<selectKey keyProperty="categoryNo" resultType="_int" order="BEFORE">
+			SELECT SEQ_CNO.NEXTVAL
+			FROM DUAL
+		</selectKey>
+		
+			INSERT ALL
+		<foreach collection="list" item="c">
+			INTO CATEGORY VALUES(#{categoryNo},#{c.categoryName})
+		</foreach>
+			SELECT *FROM DUAL
+	</insert>
+ 	-->
+
+	<insert id="selectKeyTest" parameterType="com.kh.spring.transaction.model.vo.CategoryProduct">
+		<selectKey keyProperty="productId" resultType="string" order="BEFORE">
+			<!--  SELECT CATEGORY_NO||'-'||SEQ_PNO.NEXTVAL -->
+			SELECT PID(CATEGORY_NO)
+			FROM CATEGORY
+			WHERE CATEGORY_NO = #{categoryNo}
+		</selectKey>	
+		
+		INSERT INTO CPRODUCT VALUES (#{productId},#{productName},#{categoryNo})
+	
+	</insert>	
+		
+	<insert id="pidTest" parameterType="arraylist">
+		
+		INSERT ALL
+			<foreach collection="list" item="cp">
+				INTO CPRODUCT VALUES(PID_TEST(#{cp.categoryNo}),#{cp.productName},#{cp.categoryNo})
+			</foreach>
+		SELECT * FROM DUAL
+	</insert>
+	
+	
+	<resultMap type="com.kh.spring.transaction.model.vo.Category" id="cResultSet">
+		<result column="CATEGORY_NO" property="categoryNo"/>
+		<result column="CATEGORY_NAME" property="categoryName"/>
+		
+		
+		<!-- 내부적으로 가지고 있는 컬렉션을 이용하여 한 조회구문에서 여러개의 VO 정보를 담아 리스트로 반환한다  -->
+		<collection property="pList" ofType="com.kh.spring.transaction.model.vo.Product">
+			<result column="PRODUCT_NO" property="productNo"/>
+			<result column="PRODUCT_NAME" property="productName"/>
+			<result column="CATEGORY_NO" property="categoryNo"/>
+		</collection>
+	</resultMap>
+	
+	
+	 <!-- Product ResultMap -->
+	 <resultMap type="com.kh.spring.transaction.model.vo.Product" id="pResultSet">
+	 		<result column="PRODUCT_NO" property="productNo"/>
+			<result column="PRODUCT_NAME" property="productName"/>
+			<result column="CATEGORY_NO" property="categoryNo"/>
+	 </resultMap>
+	
+	
+	
+	<!-- resultMap에서 collection을 사용할때 이미 만들어져있는 ResultMap 이 있다면 참조해서 사용 가능하다. -->
+	<resultMap type="com.kh.spring.transaction.model.vo.Category" id="cResultSet2">
+		<result column="CATEGORY_NO" property="categoryNo"/>
+		<result column="CATEGORY_NAME" property="categoryName"/>
+		
+		<collection property="pList" resultMap="pResultSet"/>
+	</resultMap>
+	
+	
+	
+	
+	<select id="categoryProductList" parameterType="_int" resultMap="cResultSet2">
+		SELECT C.CATEGORY_NO
+		      ,CATEGORY_NAME
+		      ,PRODUCT_NO
+		      ,PRODUCT_NAME
+		      ,P.CATEGORY_NO
+		FROM CATEGORY C
+		JOIN PRODUCT P ON (C.CATEGORY_NO=P.CATEGORY_NO)
+		WHERE C.CATEGORY_NO = #{categoryNo}
+	</select>
+	
+	
+	
+	
+	
+	
+	
+	
+
+</mapper>  
+  
